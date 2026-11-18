@@ -227,7 +227,10 @@ impl<C: Verification> Secp256k1<C> {
                 // and concatenate them to get the signature in big-endian format.
                 let sig_be_bytes = flip_secp256k1_endianness(&sig.0[..64].try_into().unwrap());
 
-                let signature = k256::ecdsa::Signature::from_slice(&sig_be_bytes).unwrap();
+                let signature = match k256::ecdsa::Signature::from_slice(&sig_be_bytes) {
+                    Ok(signature) => signature,
+                    Err(_) => return Err(Error::InvalidSignature),
+                };
 
                 // The recovery ID is the last byte of the signature.
                 let recovery_id = k256::ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
